@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sat Jul 19 10:13:05 PET 2025:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.16.1.1 - (1901046): instance a816c00e-0198-233e-f661-0000034ea900 
+on database directory /home/heros/Documents/unsa/bigdata-final-project/consumers/metastore_db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1dbd16a6 
+Loaded from file:/home/heros/.pyenv/versions/3.9.18/envs/pyspark-env/lib/python3.9/site-packages/pyspark/jars/derby-10.16.1.1.jar
+java.vendor=Debian
+java.runtime.version=17.0.16-ea+5-Debian-1
+user.dir=/home/heros/Documents/unsa/bigdata-final-project/consumers
+os.name=Linux
+os.arch=amd64
+os.version=6.12.37+deb13-amd64
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
