@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        USER_HADOOP = "/home/hadoop/"
+    }
+
+    stages {
+        stage('Start Services in Parallel') {
+            parallel {
+                stage('Start Elasticsearch') {
+                    steps {
+                        sh '''
+                            echo "Iniciando Elasticsearch con Java 17..."
+                            cd ${USER_HADOOP}/elasticsearch-7.17.15/
+                            ./bin/elasticsearch &
+                            sleep 10
+                        '''
+                    }
+                }
+
+                stage('Start Grafana') {
+                    steps {
+                        sh '''
+                            echo "Iniciando Grafana..."
+                            cd ${USER_HADOOP}/grafana-v10.4.2/
+                            ./bin/grafana-server web &
+                            sleep 10
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Start Consumer Elasticsearch') {
+            steps {
+                sh '''
+                    echo "Activando entorno virtual y ejecutando consumerfinal.py..."
+                    export PYENV_ROOT="$HOME/.pyenv"
+                    export PATH="$PYENV_ROOT/bin:$PATH"
+                    eval "$(pyenv init -)"
+                    eval "$(pyenv virtualenv-init -)"
+                    pyenv activate pyspark-env
+                    cd ${USER_HADOOP}
+                    python3 consumerfinal.py
+                '''
+            }
+        }
+    }
+}
