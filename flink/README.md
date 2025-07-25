@@ -116,20 +116,10 @@ hdfs dfs -mkdir -p /sensordata/temperature
 
 ---
 
-## 7. Productor y consumidor Python
-
-### 7.1 Enviar datos al tópico Kafka
+## 7. Consumidor Python con Flink
 
 ```bash
-python3 ./producer_temperature.py
-```
-
-Este script simula datos de sensores de temperatura y los envía a Kafka cada 5 segundos.
-
-### 7.2 Procesar datos en Flink (Python)
-
-```bash
-$FLINK_HOME/bin/flink run -py ./consumer_temperature.py
+$FLINK_HOME/bin/flink run -py ./consumer.py
 ```
 
 ---

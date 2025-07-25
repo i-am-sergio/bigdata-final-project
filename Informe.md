@@ -6,9 +6,9 @@
 
 ### 1.1. Clúster Kafka Kraft con 3 Nodos
 
-* Configuración de un clúster Apache Kafka utilizando **modo Kraft**.
-* Se configuraron 3 instancias EC2 (una por nodo).
-* Configuraciones clave para cada `server.properties`:
+- Configuración de un clúster Apache Kafka utilizando **modo Kraft**.
+- Se configuraron 3 instancias EC2 (una por nodo).
+- Configuraciones clave para cada `server.properties`:
 
 ```properties
 process.roles=broker,controller
@@ -63,9 +63,9 @@ Se adaptó el código para cada uno de los tópicos (`temperature`, `humidity`, 
 
 ### 3.1. Instalación y Configuración de Elasticsearch
 
-* Versión utilizada: `7.17.15`.
-* Ruta de instalación: `/home/hadoop/elasticsearch-7.17.15/`.
-* Comando de ejecución:
+- Versión utilizada: `7.17.15`.
+- Ruta de instalación: `/home/hadoop/elasticsearch-7.17.15/`.
+- Comando de ejecución:
 
 ```bash
 cd /home/hadoop/elasticsearch-7.17.15/
@@ -74,16 +74,16 @@ cd /home/hadoop/elasticsearch-7.17.15/
 
 ### 3.2. Instalación y Configuración de Grafana
 
-* Versión utilizada: `10.4.2`.
-* Ruta de instalación: `/home/hadoop/grafana-v10.4.2/`.
-* Comando de ejecución:
+- Versión utilizada: `10.4.2`.
+- Ruta de instalación: `/home/hadoop/grafana-v10.4.2/`.
+- Comando de ejecución:
 
 ```bash
 cd /home/hadoop/grafana-v10.4.2/
 ./bin/grafana-server web
 ```
 
-* Interfaz accesible en: [http://localhost:3000](http://localhost:3000)
+- Interfaz accesible en: [http://localhost:3000](http://localhost:3000)
 
 ### 3.3. Consumidor de Kafka hacia Elasticsearch (Python)
 
@@ -132,29 +132,71 @@ Se configuró un clúster de Flink de 3 nodos (1 master y 2 workers) en modo loc
 
 #### Versión utilizada
 
-* Flink 1.17.1
+- Flink 1.17.1
 
 #### Directorio de instalación
 
-* `/home/hadoop/flink-1.17.1/`
+- `/home/hadoop/flink-1.17.1/`
 
-#### Configuración de nodos
+#### Configuración de nodos y master
 
-Archivo editado: `/home/hadoop/flink-1.17.1/conf/flink-conf.yaml`
+##### En `flink/conf/workers`
 
-```yaml
-jobmanager.rpc.address: localhost
-taskmanager.numberOfTaskSlots: 4
-parallelism.default: 3
-rest.port: 8081
+```
+fedora
+paul
+aldo-nitro
 ```
 
-Archivo de nodos (`workers` o `taskmanagers`):
+##### En `flink/conf/masters` _(solo en el nodo maestro)_
 
-```txt
-localhost
-localhost
-localhost
+```
+fedora:8081
+```
+
+##### Editar `flink/conf/flink-conf.yaml` y ajustar las siguientes variables:
+
+```yaml
+# Dirección del JobManager
+jobmanager.rpc.address: fedora # O localhost si aplica
+
+# Puerto del JobManager
+jobmanager.rpc.port: 6123
+
+# Dirección de enlace del JobManager
+jobmanager.bind-host: 0.0.0.0
+
+# Memoria del JobManager
+jobmanager.memory.process.size: 1600m
+
+# Dirección de enlace del TaskManager
+taskmanager.bind-host: 0.0.0.0
+
+# Dirección del host del TaskManager
+taskmanager.host: localhost
+
+# Memoria del TaskManager
+taskmanager.memory.process.size: 1728m
+
+# Número de slots por TaskManager
+taskmanager.numberOfTaskSlots: 1
+
+# Paralelismo por defecto
+parallelism.default: 1
+
+# JARs del pipeline
+pipeline.jars: file:///home/hadoop/jars/flink-connector-kafka-1.17.1.jar;file:///home/hadoop/jars/kafka-clients-3.3.2.jar
+
+# Estrategia de tolerancia a fallos
+jobmanager.execution.failover-strategy: region
+
+# Configuración del API REST
+rest.port: 8081
+rest.address: fedora
+rest.bind-address: fedora
+
+# Ruta de Python (ajustar según la ruta del entorno en cada nodo)
+python.executable: /home/hadoop/.pyenv/versions/pyspark-env/bin/python
 ```
 
 #### Inicio del clúster
@@ -164,7 +206,7 @@ cd /home/hadoop/flink-1.17.1/
 ./bin/start-cluster.sh
 ```
 
-* Interfaz Web: [http://localhost:8081](http://localhost:8081)
+- Interfaz Web: [http://localhost:8081](http://localhost:8081)
 
 ---
 
@@ -174,11 +216,11 @@ Se configuró HDFS para almacenar los resultados batch.
 
 #### Versión utilizada
 
-* Hadoop 3.3.6
+- Hadoop 3.3.6
 
 #### Directorio de instalación
 
-* `/home/hadoop/hadoop-3.3.6/`
+- `/home/hadoop/hadoop-3.3.6/`
 
 #### Archivos modificados
 
@@ -242,43 +284,79 @@ cd /home/hadoop/hadoop-3.3.6/
 ./sbin/start-dfs.sh
 ```
 
-* Web UI de HDFS: [http://localhost:9870](http://localhost:9870)
+- Web UI de HDFS: [http://localhost:9870](http://localhost:9870)
 
 ---
 
 ### 4.3. Resultados de Procesamiento por Lotes
 
-* Los datos leídos desde los topics de Kafka se procesan por lotes usando Apache Flink.
-* El resultado del procesamiento es exportado a archivos en HDFS.
+#### Spark-Streaming
 
-#### Ejemplo de escritura en HDFS
+##### Requisitos previos
 
-El programa batch en Flink puede usar el siguiente formato para escribir en HDFS:
-
-```python
-# En PyFlink o usando el CLI:
-env = StreamExecutionEnvironment.get_execution_environment()
-...
-
-output = processed_data.write_as_text("hdfs://localhost:9000/output/iot_batch_results.txt")
-```
-
-O bien, desde comandos en bash:
+Asegúrate de haber creado y activado el entorno virtual con `pyenv`, el mismo utilizado en Flink.
 
 ```bash
-hdfs dfs -mkdir -p /output
-hdfs dfs -put resultados_lote.txt /output/
+pyenv activate pyspark
 ```
 
-#### Visualización de los resultados
-
-Los archivos en HDFS pueden ser visualizados mediante:
+Instala las dependencias necesarias:
 
 ```bash
-hdfs dfs -cat /output/iot_batch_results.txt
+python3 -m pip install flask flask-cors pyspark
 ```
 
----
+##### Ejecución
+
+Ejecuta el backend con Spark:
+
+```bash
+spark-submit ./spark.py
+```
+
+Esto expondrá el servicio Flask en el puerto `5000`.
+
+##### Realizar consultas
+
+Puedes hacer consultas HTTP al backend mediante la siguiente URL (reemplazando los parámetros según el caso):
+
+```
+http://localhost:5000/query?sensor=sound&fecha=2025-07-24&turno=noche
+```
+
+- `sensor`: nombre del sensor (por ejemplo, `sound`, `gas`, `humidity`, etc.)
+- `fecha`: en formato `YYYY-MM-DD`
+- `turno`: puede ser `mañana`, `tarde`, `noche` (sin tilde si se codifica como parámetro URL)
+
+#### Visualización de los resultados - Monitoring-app
+
+##### Requisitos previos
+
+Antes de ejecutar esta aplicación, asegúrate de que el backend en Spark con Flask ya esté corriendo correctamente (Guia en la carpeta Spark).
+
+##### Instalación
+
+Instala las dependencias del frontend:
+
+```bash
+npm install
+```
+
+##### Ejecución
+
+Inicia el servidor de desarrollo de Vite:
+
+```bash
+npm run dev
+```
+
+##### Acceso a la aplicación
+
+Una vez iniciado el servidor, abre tu navegador y visita:
+
+[http://localhost:5173/](http://localhost:5173/)
+
+![](./assets/monitoring-app.png)
 
 ## 5. Automatización con Jenkins (Jenkinsfile)
 
